@@ -33,6 +33,11 @@ import { Product, ProductSortBy, SortOrder } from '../../types';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { toggleFavorite } from '../../store/favoriteSlice';
+import {
+  addToCart,
+  decreaseQuantity,
+  increaseQuantity,
+} from '../../store/cartSlice';
 
 const PAGE_SIZE = 10;
 
@@ -94,6 +99,8 @@ const ProductListScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const favorites = useSelector((state: RootState) => state.favorites.items);
+
+  const cartItems = useSelector((state: RootState) => state.cart.items);
 
   /*
    * Search has priority over category.
@@ -335,15 +342,59 @@ const ProductListScreen = () => {
    * Product renderer.
    */
   const renderProduct = ({ item }: { item: Product }) => {
+    const cartItem = cartItems.find(
+      cartItem => cartItem.product.id === item.id,
+    );
     return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() =>
-          navigation.navigate('ProductDetail', {
-            productId: item.id,
-          })
-        }
-      >
+      <View>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() =>
+            navigation.navigate('ProductDetail', {
+              productId: item.id,
+            })
+          }
+        >
+          <Image source={{ uri: item.thumbnail }} style={styles.image} />
+
+          <View style={styles.info}>
+            <Text style={styles.title} numberOfLines={2}>
+              {item.title}
+            </Text>
+
+            <Text style={styles.price}>${item.price}</Text>
+
+            <Text style={styles.rating}>⭐ {item.rating}</Text>
+
+            {cartItem ? (
+              <View style={styles.quantityContainer}>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => dispatch(decreaseQuantity(item.id))}
+                >
+                  <Text style={styles.quantityButtonText}>−</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.quantityText}>{cartItem.quantity}</Text>
+
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => dispatch(increaseQuantity(item.id))}
+                >
+                  <Text style={styles.quantityButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                touchSoundDisabled={false}
+                style={styles.addToCartButton}
+                onPress={() => dispatch(addToCart(item))}
+              >
+                <Text style={styles.addToCartText}>Add to Cart</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => dispatch(toggleFavorite(item))}
           style={styles.favoriteButton}
@@ -352,18 +403,7 @@ const ProductListScreen = () => {
             {favorites.some(favorite => favorite.id === item.id) ? '♥' : '♡'}
           </Text>
         </TouchableOpacity>
-        <Image source={{ uri: item.thumbnail }} style={styles.image} />
-
-        <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={2}>
-            {item.title}
-          </Text>
-
-          <Text style={styles.price}>${item.price}</Text>
-
-          <Text style={styles.rating}>⭐ {item.rating}</Text>
-        </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -577,9 +617,8 @@ const styles = StyleSheet.create({
 
   favoriteButton: {
     position: 'absolute',
-    right: 8,
-    top: 8,
-    padding: 8,
+    right: 30,
+    top: 12,
   },
 
   favoriteText: {
@@ -627,6 +666,48 @@ const styles = StyleSheet.create({
     height: 60,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+  },
+
+  quantityButtonText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+
+  quantityText: {
+    minWidth: 40,
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  addToCartButton: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+  },
+
+  addToCartText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
 

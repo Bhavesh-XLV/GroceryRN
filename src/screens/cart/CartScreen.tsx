@@ -46,6 +46,10 @@ const CartScreen = () => {
       id: `ORD-${Date.now()}`,
       date: new Date().toISOString(),
       items: cartItems,
+      subtotal: summary.subtotal,
+      discountPercentage: appliedCoupon === 'SAVE10' ? 10 : 0,
+      discount: summary.discount,
+      tax: summary.tax,
       total: summary.total,
       status: 'processing' as const,
     };

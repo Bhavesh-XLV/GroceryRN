@@ -61,14 +61,38 @@ const OrdersScreen = () => {
                   {cartItem.product.title}
                 </Text>
 
-                <Text style={styles.quantity}>× {cartItem.quantity}</Text>
+                <Text style={styles.quantity}>
+                  ${cartItem.product.price.toFixed(2)} × {cartItem.quantity}
+                </Text>
               </View>
             ))}
           </View>
 
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.total}>${item?.total?.toFixed(2)}</Text>
+          <View style={styles.orderSummary}>
+            <View style={styles.summaryRow}>
+              <Text>Subtotal</Text>
+              <Text>${item.subtotal.toFixed(2)}</Text>
+            </View>
+
+            {item.discount > 0 && (
+              <View style={styles.summaryRow}>
+                <Text>Discount ({item.discountPercentage}%)</Text>
+
+                <Text style={styles.discount}>
+                  -${item.discount.toFixed(2)}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.summaryRow}>
+              <Text>Tax</Text>
+              <Text>${item.tax.toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.total}>${item.total.toFixed(2)}</Text>
+            </View>
           </View>
         </View>
       )}
@@ -137,15 +161,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-
   totalLabel: {
     fontWeight: '700',
   },
@@ -171,6 +186,31 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#666',
     textAlign: 'center',
+  },
+  orderSummary: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+  },
+
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  discount: {
+    fontWeight: '600',
+  },
+
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
   },
 });
 

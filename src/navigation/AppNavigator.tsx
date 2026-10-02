@@ -12,7 +12,7 @@ import BottomTabNavigator from './BottomTabNavigator';
 
 export type RootStackParamList = {
   Login: undefined;
-  Home: undefined;
+  Main: undefined;
   ProductDetail: {
     productId: number;
   };
@@ -48,7 +48,7 @@ function AppNavigator() {
         {accessToken ? (
           <>
             <Stack.Screen
-              name="Home"
+              name="Main"
               component={BottomTabNavigator}
               options={{
                 headerShown: false,
