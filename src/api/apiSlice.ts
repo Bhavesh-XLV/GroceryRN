@@ -1,7 +1,27 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 import { API_BASE_URL } from '../constants/config';
-import { Product, ProductListResponse } from '../types';
+import {
+  Product,
+  ProductListResponse,
+  ProductSortBy,
+  SortOrder,
+} from '../types';
+
+interface ProductQueryParams {
+  limit: number;
+  skip: number;
+  sortBy?: ProductSortBy;
+  order?: SortOrder;
+}
+
+interface SearchProductQueryParams extends ProductQueryParams {
+  query: string;
+}
+
+interface CategoryProductQueryParams extends ProductQueryParams {
+  category: string;
+}
 
 export const apiSlice = createApi({
   reducerPath: 'api',
@@ -11,57 +31,56 @@ export const apiSlice = createApi({
   }),
 
   endpoints: builder => ({
-    getProducts: builder.query<
-      ProductListResponse,
-      {
-        limit: number;
-        skip: number;
-      }
-    >({
-      query: ({ limit, skip }) => ({
+    getProducts: builder.query<ProductListResponse, ProductQueryParams>({
+      query: ({ limit, skip, sortBy, order }) => ({
         url: '/products',
         params: {
           limit,
           skip,
+          ...(sortBy ? { sortBy } : {}),
+          ...(order ? { order } : {}),
         },
       }),
     }),
 
     searchProducts: builder.query<
       ProductListResponse,
-      {
-        query: string;
-        limit: number;
-        skip: number;
-      }
+      SearchProductQueryParams
     >({
-      query: ({ query, limit, skip }) => ({
+      query: ({ query, limit, skip, sortBy, order }) => ({
         url: '/products/search',
         params: {
           q: query,
           limit,
           skip,
+          ...(sortBy ? { sortBy } : {}),
+          ...(order ? { order } : {}),
         },
       }),
     }),
 
-    getCategories: builder.query<string[], void>({
+    getCategories: builder.query<
+      Array<{
+        slug: string;
+        name: string;
+        url: string;
+      }>,
+      void
+    >({
       query: () => '/products/categories',
     }),
 
     getProductsByCategory: builder.query<
       ProductListResponse,
-      {
-        category: string;
-        limit: number;
-        skip: number;
-      }
+      CategoryProductQueryParams
     >({
-      query: ({ category, limit, skip }) => ({
+      query: ({ category, limit, skip, sortBy, order }) => ({
         url: `/products/category/${encodeURIComponent(category)}`,
         params: {
           limit,
           skip,
+          ...(sortBy ? { sortBy } : {}),
+          ...(order ? { order } : {}),
         },
       }),
     }),
