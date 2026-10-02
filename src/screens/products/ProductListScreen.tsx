@@ -1,12 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-
-import { RootStackParamList } from '../../navigation/AppNavigator';
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
 import {
   ActivityIndicator,
   FlatList,
@@ -19,6 +12,10 @@ import {
   View,
 } from 'react-native';
 
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+import { useNavigation } from '@react-navigation/native';
+
 import {
   useGetCategoriesQuery,
   useGetProductsByCategoryQuery,
@@ -27,17 +24,25 @@ import {
 } from '../../api/apiSlice';
 
 import useDebounce from '../../hooks/useDebounce';
+import { useAppTheme } from '../../hooks/useAppTheme';
 
-import { Product, ProductSortBy, SortOrder } from '../../types';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
-import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
-import { toggleFavorite } from '../../store/favoriteSlice';
+
 import {
   addToCart,
   decreaseQuantity,
   increaseQuantity,
 } from '../../store/cartSlice';
+
+import { toggleFavorite } from '../../store/favoriteSlice';
+
+import { Product, ProductSortBy, SortOrder } from '../../types';
+
+import { useDispatch, useSelector } from 'react-redux';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 const PAGE_SIZE = 10;
 
@@ -80,6 +85,9 @@ const SORT_OPTIONS: {
 
 const ProductListScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { colors } = useAppTheme();
 
   const [skip, setSkip] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
@@ -88,6 +96,7 @@ const ProductListScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
 
   const [sortBy, setSortBy] = useState<ProductSortBy | undefined>('price');
+
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>('asc');
 
   const debouncedSearch = useDebounce(searchText, 500);
@@ -96,19 +105,15 @@ const ProductListScreen = () => {
 
   const isCategorySelected = selectedCategory.length > 0;
 
-  const dispatch = useDispatch<AppDispatch>();
+  const isFiltered = isSearching || isCategorySelected;
 
   const favorites = useSelector((state: RootState) => state.favorites.items);
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
 
   /*
-   * Search has priority over category.
-   */
-  const isFiltered = isSearching || isCategorySelected;
-
-  /*
-   * Whenever any filter changes, start again from page 1.
+   * Whenever any filter changes,
+   * start again from page 1.
    */
   useEffect(() => {
     setSkip(0);
@@ -185,7 +190,8 @@ const ProductListScreen = () => {
   );
 
   /*
-   * Determine which API response is currently active.
+   * Determine which API response
+   * is currently active.
    */
   const activeData = useMemo(() => {
     if (isSearching) {
@@ -200,7 +206,7 @@ const ProductListScreen = () => {
   }, [isSearching, isCategorySelected, searchData, categoryData, productData]);
 
   /*
-   * Determine active loading state.
+   * Determine active fetching state.
    */
   const isActiveFetching = isSearching
     ? isSearchFetching
@@ -236,7 +242,7 @@ const ProductListScreen = () => {
 
     setProducts(previousProducts => {
       /*
-       * First page replaces the current list.
+       * First page replaces current list.
        */
       if (skip === 0) {
         return activeData.products;
@@ -244,7 +250,6 @@ const ProductListScreen = () => {
 
       /*
        * Later pages are appended.
-       *
        * Set prevents duplicate products.
        */
       const existingIds = new Set(previousProducts.map(product => product.id));
@@ -287,18 +292,14 @@ const ProductListScreen = () => {
   /*
    * Category selection.
    */
-
   const categoryOptions = useMemo(
     () => [
       {
         slug: '',
-
         name: 'All',
       },
-
       ...categories,
     ],
-
     [categories],
   );
 
@@ -324,7 +325,6 @@ const ProductListScreen = () => {
       const isSameSort = sortBy === newSortBy && sortOrder === newSortOrder;
 
       if (isSameSort) {
-        // Reset sorting
         setSortBy(undefined);
         setSortOrder(undefined);
       } else {
@@ -337,7 +337,6 @@ const ProductListScreen = () => {
     },
     [sortBy, sortOrder],
   );
-
   /*
    * Product renderer.
    */
@@ -345,40 +344,98 @@ const ProductListScreen = () => {
     const cartItem = cartItems.find(
       cartItem => cartItem.product.id === item.id,
     );
+
+    const isFavorite = favorites.some(favorite => favorite.id === item.id);
+
     return (
-      <View>
+      <View style={styles.productWrapper}>
         <TouchableOpacity
-          style={styles.card}
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.card,
+            },
+          ]}
           onPress={() =>
             navigation.navigate('ProductDetail', {
               productId: item.id,
             })
           }
         >
-          <Image source={{ uri: item.thumbnail }} style={styles.image} />
+          <Image
+            source={{
+              uri: item.thumbnail,
+            }}
+            style={styles.image}
+          />
 
           <View style={styles.info}>
-            <Text style={styles.title} numberOfLines={2}>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: colors.text,
+                },
+              ]}
+              numberOfLines={2}
+            >
               {item.title}
             </Text>
 
-            <Text style={styles.price}>${item.price}</Text>
+            <Text
+              style={[
+                styles.price,
+                {
+                  color: colors.text,
+                },
+              ]}
+            >
+              ${item.price}
+            </Text>
 
-            <Text style={styles.rating}>⭐ {item.rating}</Text>
+            <Text
+              style={[
+                styles.rating,
+                {
+                  color: colors.text,
+                },
+              ]}
+            >
+              ⭐ {item.rating}
+            </Text>
 
             {cartItem ? (
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
-                  style={styles.quantityButton}
+                  style={[
+                    styles.quantityButton,
+                    {
+                      backgroundColor: colors.primary,
+                    },
+                  ]}
                   onPress={() => dispatch(decreaseQuantity(item.id))}
                 >
                   <Text style={styles.quantityButtonText}>−</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.quantityText}>{cartItem.quantity}</Text>
+                <Text
+                  style={[
+                    styles.quantityText,
+                    {
+                      color: colors.text,
+                    },
+                  ]}
+                >
+                  {cartItem.quantity}
+                </Text>
 
                 <TouchableOpacity
-                  style={styles.quantityButton}
+                  style={[
+                    styles.quantityButton,
+                    {
+                      backgroundColor: colors.primary,
+                    },
+                  ]}
                   onPress={() => dispatch(increaseQuantity(item.id))}
                 >
                   <Text style={styles.quantityButtonText}>+</Text>
@@ -386,8 +443,12 @@ const ProductListScreen = () => {
               </View>
             ) : (
               <TouchableOpacity
-                touchSoundDisabled={false}
-                style={styles.addToCartButton}
+                style={[
+                  styles.addToCartButton,
+                  {
+                    backgroundColor: colors.primary,
+                  },
+                ]}
                 onPress={() => dispatch(addToCart(item))}
               >
                 <Text style={styles.addToCartText}>Add to Cart</Text>
@@ -395,12 +456,20 @@ const ProductListScreen = () => {
             )}
           </View>
         </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => dispatch(toggleFavorite(item))}
           style={styles.favoriteButton}
         >
-          <Text style={styles.favoriteText}>
-            {favorites.some(favorite => favorite.id === item.id) ? '♥' : '♡'}
+          <Text
+            style={[
+              styles.favoriteText,
+              {
+                color: colors.danger,
+              },
+            ]}
+          >
+            {isFavorite ? '♥' : '♡'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -412,8 +481,15 @@ const ProductListScreen = () => {
    */
   if (isActiveLoading && skip === 0 && products.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View
+        style={[
+          styles.center,
+          {
+            backgroundColor: colors.background,
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -423,22 +499,51 @@ const ProductListScreen = () => {
    */
   if (isActiveError && products.length === 0) {
     return (
-      <View style={styles.center}>
-        <Text>Something went wrong. Please try again.</Text>
+      <View
+        style={[
+          styles.center,
+          {
+            backgroundColor: colors.background,
+          },
+        ]}
+      >
+        <Text
+          style={{
+            color: colors.text,
+          }}
+        >
+          Something went wrong. Please try again.
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+        },
+      ]}
+    >
       {/* Search */}
       <TextInput
         value={searchText}
         onChangeText={setSearchText}
         placeholder="Search products..."
-        style={styles.searchInput}
+        placeholderTextColor={colors.secondaryText}
+        style={[
+          styles.searchInput,
+          {
+            color: colors.text,
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+        ]}
         returnKeyType="search"
       />
+
       <View>
         {/* Categories */}
         {!isCategoriesLoading && (
@@ -455,14 +560,25 @@ const ProductListScreen = () => {
                 <TouchableOpacity
                   style={[
                     styles.categoryChip,
-                    selected && styles.selectedCategoryChip,
+                    {
+                      borderColor: colors.border,
+                    },
+                    selected && {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary,
+                    },
                   ]}
                   onPress={() => handleCategoryPress(item.slug)}
                 >
                   <Text
                     style={[
                       styles.categoryText,
-                      selected && styles.selectedCategoryText,
+                      {
+                        color: colors.text,
+                      },
+                      selected && {
+                        color: '#fff',
+                      },
                     ]}
                   >
                     {item.name}
@@ -485,11 +601,28 @@ const ProductListScreen = () => {
 
             return (
               <TouchableOpacity
-                style={[styles.sortChip, selected && styles.selectedSortChip]}
+                style={[
+                  styles.sortChip,
+                  {
+                    borderColor: colors.border,
+                  },
+                  selected && {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary,
+                  },
+                ]}
                 onPress={() => handleSortPress(item.sortBy, item.order)}
               >
                 <Text
-                  style={[styles.sortText, selected && styles.selectedSortText]}
+                  style={[
+                    styles.sortText,
+                    {
+                      color: colors.text,
+                    },
+                    selected && {
+                      color: '#fff',
+                    },
+                  ]}
                 >
                   {item.label}
                 </Text>
@@ -501,7 +634,7 @@ const ProductListScreen = () => {
 
       {/* Search loading */}
       {isSearching && isSearchFetching && products.length === 0 && (
-        <ActivityIndicator style={styles.searchLoader} />
+        <ActivityIndicator style={styles.searchLoader} color={colors.primary} />
       )}
 
       <FlatList
@@ -514,19 +647,26 @@ const ProductListScreen = () => {
           <RefreshControl
             refreshing={isActiveFetching && skip === 0 && products.length > 0}
             onRefresh={handleRefresh}
+            tintColor={colors.primary}
           />
         }
         ListFooterComponent={() => {
           return isActiveFetching && skip > 0 ? (
             <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" />
+              <ActivityIndicator size="small" color={colors.primary} />
             </View>
           ) : null;
         }}
         ListEmptyComponent={() => {
           return !isActiveFetching ? (
             <View style={styles.emptyContainer}>
-              <Text>No products found.</Text>
+              <Text
+                style={{
+                  color: colors.secondaryText,
+                }}
+              >
+                No products found.
+              </Text>
             </View>
           ) : null;
         }}
@@ -546,7 +686,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
   },
 
@@ -561,22 +700,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ddd',
     height: 40,
     marginBottom: 14,
   },
 
-  selectedCategoryChip: {
-    backgroundColor: '#222',
-    borderColor: '#222',
-  },
-
   categoryText: {
     fontSize: 13,
-  },
-
-  selectedCategoryText: {
-    color: '#fff',
   },
 
   sortChip: {
@@ -585,25 +714,19 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ddd',
     height: 40,
-  },
-
-  selectedSortChip: {
-    backgroundColor: '#222',
-    borderColor: '#222',
   },
 
   sortText: {
     fontSize: 13,
   },
 
-  selectedSortText: {
-    color: '#fff',
-  },
-
   searchLoader: {
     marginVertical: 8,
+  },
+
+  productWrapper: {
+    position: 'relative',
   },
 
   card: {
@@ -612,7 +735,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: '#fff',
   },
 
   favoriteButton: {
@@ -667,6 +789,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -679,7 +802,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
   },
 
   quantityButtonText: {
@@ -701,7 +823,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
   },
 
   addToCartText: {

@@ -8,24 +8,25 @@ import {
   View,
   TouchableOpacity,
 } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { useGetProductByIdQuery } from '../../api/apiSlice';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useAppTheme } from '../../hooks/useAppTheme';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
-import { toggleFavorite } from '../../store/favoriteSlice';
-
 import {
   addToCart,
   decreaseQuantity,
   increaseQuantity,
 } from '../../store/cartSlice';
+import { toggleFavorite } from '../../store/favoriteSlice';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
 const ProductDetailScreen = ({ route }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { colors } = useAppTheme();
 
   const { productId } = route.params;
 
@@ -45,67 +46,81 @@ const ProductDetailScreen = ({ route }: Props) => {
 
   if (isLoading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (isError || !product) {
     return (
-      <View style={styles.center}>
-        <Text>Unable to load product.</Text>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={{ color: colors.text }}>Unable to load product.</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      style={{ backgroundColor: colors.background }}
+      contentContainerStyle={styles.container}
+    >
       <Image source={{ uri: product.thumbnail }} style={styles.image} />
 
-      <Text style={styles.title}>{product.title}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>
+        {product.title}
+      </Text>
 
       <TouchableOpacity
         onPress={() => {
-          if (product) {
-            console.log('product', product);
-            dispatch(toggleFavorite(product));
-          }
+          dispatch(toggleFavorite(product));
         }}
         style={styles.favoriteButton}
       >
-        <Text style={styles.favoriteText}>{isFavorite ? '♥' : '♡'}</Text>
+        <Text style={[styles.favoriteText, { color: colors.danger }]}>
+          {isFavorite ? '♥' : '♡'}
+        </Text>
       </TouchableOpacity>
 
-      <Text style={styles.price}>${product.price}</Text>
+      <Text style={[styles.price, { color: colors.text }]}>
+        ${product.price}
+      </Text>
 
-      <Text style={styles.discount}>{product.discountPercentage}% OFF</Text>
+      <Text style={[styles.discount, { color: colors.primary }]}>
+        {product.discountPercentage}% OFF
+      </Text>
 
-      <Text style={styles.rating}>⭐ {product.rating}</Text>
+      <Text style={[styles.rating, { color: colors.text }]}>
+        ⭐ {product.rating}
+      </Text>
 
-      <Text style={styles.description}>{product.description}</Text>
+      <Text style={[styles.description, { color: colors.secondaryText }]}>
+        {product.description}
+      </Text>
 
       {cartItem ? (
         <View style={styles.quantityContainer}>
           <TouchableOpacity
             onPress={() => dispatch(decreaseQuantity(product.id))}
-            style={styles.quantityButton}
+            style={[styles.quantityButton, { backgroundColor: colors.primary }]}
           >
             <Text style={styles.quantityButtonText}>−</Text>
           </TouchableOpacity>
 
-          <Text style={styles.quantityText}>{cartItem.quantity}</Text>
+          <Text style={[styles.quantityText, { color: colors.text }]}>
+            {cartItem.quantity}
+          </Text>
 
           <TouchableOpacity
             onPress={() => dispatch(increaseQuantity(product.id))}
-            style={styles.quantityButton}
+            style={[styles.quantityButton, { backgroundColor: colors.primary }]}
           >
             <Text style={styles.quantityButtonText}>+</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <TouchableOpacity
-          style={styles.addToCartButton}
+          style={[styles.addToCartButton, { backgroundColor: colors.primary }]}
           onPress={() => dispatch(addToCart(product))}
         >
           <Text style={styles.addToCartText}>Add to Cart</Text>
@@ -141,6 +156,7 @@ const styles = StyleSheet.create({
   discount: {
     marginTop: 8,
     fontSize: 16,
+    fontWeight: '600',
   },
 
   rating: {
@@ -159,6 +175,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   favoriteButton: {
     position: 'absolute',
     right: 16,
@@ -168,6 +185,7 @@ const styles = StyleSheet.create({
   favoriteText: {
     fontSize: 30,
   },
+
   quantityContainer: {
     marginTop: 24,
     flexDirection: 'row',
@@ -181,7 +199,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
   },
 
   quantityButtonText: {
@@ -202,7 +219,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
-    backgroundColor: '#000',
   },
 
   addToCartText: {

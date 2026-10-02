@@ -11,6 +11,7 @@ import { StyleSheet } from 'react-native';
 import { restoreFavorites } from './src/store/favoriteSlice';
 import { restoreCart } from './src/store/cartSlice';
 import { restoreOrders } from './src/store/orderSlice';
+import { restoreTheme } from './src/store/themeSlice';
 
 function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
@@ -20,6 +21,7 @@ function AppInitializer() {
     dispatch(restoreFavorites());
     dispatch(restoreCart());
     dispatch(restoreOrders());
+    dispatch(restoreTheme());
   }, [dispatch]);
 
   return (

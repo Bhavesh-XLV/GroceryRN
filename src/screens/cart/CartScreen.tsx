@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useAppTheme } from '../../hooks/useAppTheme';
 import { AppDispatch, RootState } from '../../store';
 import {
   clearCart,
@@ -17,9 +18,8 @@ import {
   increaseQuantity,
   removeFromCart,
 } from '../../store/cartSlice';
-
-import { calculateCartSummary } from '../../utils/cartCalculations';
 import { createOrder } from '../../store/orderSlice';
+import { calculateCartSummary } from '../../utils/cartCalculations';
 
 const CartScreen = () => {
   const [couponCode, setCouponCode] = useState('');
@@ -28,14 +28,22 @@ const CartScreen = () => {
   );
 
   const dispatch = useDispatch<AppDispatch>();
+  const { colors } = useAppTheme();
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
 
   if (cartItems.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>Your Cart is Empty</Text>
-        <Text style={styles.emptyText}>Add some products to your cart.</Text>
+      <View
+        style={[styles.emptyContainer, { backgroundColor: colors.background }]}
+      >
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>
+          Your Cart is Empty
+        </Text>
+
+        <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
+          Add some products to your cart.
+        </Text>
       </View>
     );
   }
@@ -59,38 +67,59 @@ const CartScreen = () => {
     dispatch(clearCart());
   };
 
+  const handleApplyCoupon = () => {
+    if (couponCode.trim().toUpperCase() === 'SAVE10') {
+      setAppliedCoupon('SAVE10');
+    } else {
+      setAppliedCoupon(undefined);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={cartItems}
         keyExtractor={item => item.product.id.toString()}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <Image
               source={{ uri: item.product.thumbnail }}
               style={styles.image}
             />
 
             <View style={styles.info}>
-              <Text style={styles.title} numberOfLines={2}>
+              <Text
+                style={[styles.title, { color: colors.text }]}
+                numberOfLines={2}
+              >
                 {item.product.title}
               </Text>
 
-              <Text style={styles.price}>${item.product.price}</Text>
+              <Text style={[styles.price, { color: colors.text }]}>
+                ${item.product.price}
+              </Text>
 
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
-                  style={styles.quantityButton}
+                  style={[
+                    styles.quantityButton,
+                    { backgroundColor: colors.primary },
+                  ]}
                   onPress={() => dispatch(decreaseQuantity(item.product.id))}
                 >
                   <Text style={styles.quantityButtonText}>−</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.quantity}>{item.quantity}</Text>
+                <Text style={[styles.quantity, { color: colors.text }]}>
+                  {item.quantity}
+                </Text>
 
                 <TouchableOpacity
-                  style={styles.quantityButton}
+                  style={[
+                    styles.quantityButton,
+                    { backgroundColor: colors.primary },
+                  ]}
                   onPress={() => dispatch(increaseQuantity(item.product.id))}
                 >
                   <Text style={styles.quantityButtonText}>+</Text>
@@ -102,7 +131,9 @@ const CartScreen = () => {
               style={styles.removeButton}
               onPress={() => dispatch(removeFromCart(item.product.id))}
             >
-              <Text style={styles.removeText}>Remove</Text>
+              <Text style={[styles.removeText, { color: colors.danger }]}>
+                Remove
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -112,45 +143,56 @@ const CartScreen = () => {
           value={couponCode}
           onChangeText={setCouponCode}
           placeholder="Enter coupon code"
+          placeholderTextColor={colors.secondaryText}
           autoCapitalize="characters"
-          style={styles.couponInput}
+          style={[
+            styles.couponInput,
+            {
+              color: colors.text,
+              borderColor: colors.border,
+              backgroundColor: colors.card,
+            },
+          ]}
         />
 
         <TouchableOpacity
-          style={styles.couponButton}
-          onPress={() => {
-            if (couponCode.trim().toUpperCase() === 'SAVE10') {
-              setAppliedCoupon('SAVE10');
-            } else {
-              setAppliedCoupon(undefined);
-            }
-          }}
+          style={[styles.couponButton, { backgroundColor: colors.primary }]}
+          onPress={handleApplyCoupon}
         >
           <Text style={styles.couponButtonText}>Apply</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.summary}>
+      <View style={[styles.summary, { borderTopColor: colors.border }]}>
         <View style={styles.summaryRow}>
-          <Text>Subtotal</Text>
-          <Text>${summary.subtotal.toFixed(2)}</Text>
+          <Text style={{ color: colors.secondaryText }}>Subtotal</Text>
+
+          <Text style={{ color: colors.text }}>
+            ${summary.subtotal.toFixed(2)}
+          </Text>
         </View>
 
         <View style={styles.summaryRow}>
-          <Text>Discount</Text>
-          <Text>-${summary.discount.toFixed(2)}</Text>
+          <Text style={{ color: colors.secondaryText }}>Discount</Text>
+
+          <Text style={styles.discount}>-${summary.discount.toFixed(2)}</Text>
         </View>
 
         <View style={styles.summaryRow}>
-          <Text>Tax</Text>
-          <Text>${summary.tax.toFixed(2)}</Text>
+          <Text style={{ color: colors.secondaryText }}>Tax</Text>
+
+          <Text style={{ color: colors.text }}>${summary.tax.toFixed(2)}</Text>
         </View>
 
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>${summary.total.toFixed(2)}</Text>
+        <View style={[styles.totalRow, { borderTopColor: colors.border }]}>
+          <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
+
+          <Text style={[styles.totalValue, { color: colors.text }]}>
+            ${summary.total.toFixed(2)}
+          </Text>
         </View>
+
         <TouchableOpacity
-          style={styles.placeOrderButton}
+          style={[styles.placeOrderButton, { backgroundColor: colors.primary }]}
           onPress={handlePlaceOrder}
         >
           <Text style={styles.placeOrderText}>Place Order</Text>
@@ -165,49 +207,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  summary: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-
-  placeOrderButton: {
-    marginTop: 16,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: '#000',
-  },
-
-  placeOrderText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  totalLabel: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-
-  totalValue: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
   list: {
     padding: 16,
   },
@@ -217,7 +216,6 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     borderRadius: 10,
-    backgroundColor: '#f5f5f5',
   },
 
   image: {
@@ -234,34 +232,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-  },
-
-  couponContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-
-  couponInput: {
-    flex: 1,
-    height: 44,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-  },
-
-  couponButton: {
-    marginLeft: 8,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#000',
-  },
-
-  couponButtonText: {
-    color: '#fff',
-    fontWeight: '700',
   },
 
   price: {
@@ -282,7 +252,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
   },
 
   quantityButtonText: {
@@ -307,6 +276,80 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
+  couponContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+
+  couponInput: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+
+  couponButton: {
+    marginLeft: 8,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  couponButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+
+  summary: {
+    padding: 16,
+    borderTopWidth: 1,
+  },
+
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+
+  discount: {
+    color: '#16a34a',
+    fontWeight: '600',
+  },
+
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+  },
+
+  totalLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
+  totalValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
+  placeOrderButton: {
+    marginTop: 16,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+
+  placeOrderText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
@@ -321,7 +364,6 @@ const styles = StyleSheet.create({
 
   emptyText: {
     marginTop: 8,
-    color: '#666',
   },
 });
 

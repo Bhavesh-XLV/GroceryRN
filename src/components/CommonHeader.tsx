@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useAppTheme } from '../hooks/useAppTheme';
 
 interface CommonHeaderProps {
   title: string;
@@ -14,21 +15,22 @@ const CommonHeader = ({
   rightComponent,
 }: CommonHeaderProps) => {
   const navigation = useNavigation();
+  const { colors } = useAppTheme();
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.leftContainer}>
         {showBack && (
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-            <Text style={styles.backText}>‹</Text>
+            <Text style={[styles.backText, { color: colors.text }]}>‹</Text>
           </TouchableOpacity>
         )}
 
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {title}
         </Text>
       </View>
@@ -45,7 +47,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    backgroundColor: '#fff',
   },
 
   leftContainer: {

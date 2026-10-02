@@ -6,6 +6,7 @@ import authReducer from './authSlice';
 import favoriteReducer from './favoriteSlice';
 import cartReducer from './cartSlice';
 import orderReducer from './orderSlice';
+import themeReducer from './themeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     favorites: favoriteReducer,
     cart: cartReducer,
     orders: orderReducer,
+    theme: themeReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
 

@@ -11,24 +11,32 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { useAppTheme } from '../../hooks/useAppTheme';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-
-import { useDispatch, useSelector } from 'react-redux';
-
 import { AppDispatch, RootState } from '../../store';
 import { removeFavorite } from '../../store/favoriteSlice';
+
+import { useDispatch, useSelector } from 'react-redux';
 
 const FavoritesScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   const dispatch = useDispatch<AppDispatch>();
   const favorites = useSelector((state: RootState) => state.favorites.items);
 
+  const { colors } = useAppTheme();
+
   if (favorites.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>No Favorites Yet</Text>
-        <Text style={styles.emptyText}>
+      <View
+        style={[styles.emptyContainer, { backgroundColor: colors.background }]}
+      >
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>
+          No Favorites Yet
+        </Text>
+
+        <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
           Products you favorite will appear here.
         </Text>
       </View>
@@ -36,45 +44,74 @@ const FavoritesScreen = () => {
   }
 
   return (
-    <FlatList
-      data={favorites}
-      keyExtractor={item => item.id.toString()}
-      contentContainerStyle={styles.list}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() =>
-            navigation.navigate('ProductDetail', {
-              productId: item.id,
-            })
-          }
-        >
-          <Image source={{ uri: item.thumbnail }} style={styles.image} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <FlatList
+        data={favorites}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.list}
+        renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.removeButton}
-            onPress={() => dispatch(removeFavorite(item.id))}
+            style={[styles.card, { backgroundColor: colors.card }]}
+            onPress={() =>
+              navigation.navigate('ProductDetail', {
+                productId: item.id,
+              })
+            }
           >
-            <Text style={styles.removeText}>♥</Text>
+            <Image source={{ uri: item.thumbnail }} style={styles.image} />
+
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => dispatch(removeFavorite(item.id))}
+            >
+              <Text style={[styles.removeText, { color: colors.danger }]}>
+                ♥
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.info}>
+              <Text
+                style={[styles.title, { color: colors.text }]}
+                numberOfLines={2}
+              >
+                {item.title}
+              </Text>
+
+              <Text style={[styles.price, { color: colors.text }]}>
+                ${item.price}
+              </Text>
+
+              <Text style={[styles.rating, { color: colors.text }]}>
+                ⭐ {item.rating}
+              </Text>
+            </View>
           </TouchableOpacity>
-
-          <View style={styles.info}>
-            <Text style={styles.title} numberOfLines={2}>
-              {item.title}
-            </Text>
-
-            <Text style={styles.price}>${item.price}</Text>
-
-            <Text style={styles.rating}>⭐ {item.rating}</Text>
-          </View>
-        </TouchableOpacity>
-      )}
-    />
+        )}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+
   list: {
     padding: 16,
+  },
+
+  card: {
+    flexDirection: 'row',
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 10,
+  },
+
+  image: {
+    width: 90,
+    height: 90,
+    resizeMode: 'contain',
   },
 
   removeButton: {
@@ -86,20 +123,6 @@ const styles = StyleSheet.create({
 
   removeText: {
     fontSize: 24,
-  },
-
-  card: {
-    flexDirection: 'row',
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 10,
-    backgroundColor: '#f5f5f5',
-  },
-
-  image: {
-    width: 90,
-    height: 90,
-    resizeMode: 'contain',
   },
 
   info: {
@@ -139,7 +162,6 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 8,
     textAlign: 'center',
-    color: '#666',
   },
 });
 
