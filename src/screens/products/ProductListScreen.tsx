@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+
+import { RootStackParamList } from '../../navigation/AppNavigator';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+
 import {
   ActivityIndicator,
   FlatList,
@@ -63,6 +70,8 @@ const SORT_OPTIONS: {
 ];
 
 const ProductListScreen = () => {
+  const navigation = useNavigation<NavigationProp>();
+
   const [skip, setSkip] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -319,7 +328,14 @@ const ProductListScreen = () => {
    */
   const renderProduct = ({ item }: { item: Product }) => {
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() =>
+          navigation.navigate('ProductDetail', {
+            productId: item.id,
+          })
+        }
+      >
         <Image source={{ uri: item.thumbnail }} style={styles.image} />
 
         <View style={styles.info}>
@@ -331,7 +347,7 @@ const ProductListScreen = () => {
 
           <Text style={styles.rating}>⭐ {item.rating}</Text>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
