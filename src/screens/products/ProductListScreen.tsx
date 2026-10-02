@@ -30,6 +30,10 @@ import useDebounce from '../../hooks/useDebounce';
 
 import { Product, ProductSortBy, SortOrder } from '../../types';
 
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { toggleFavorite } from '../../store/favoriteSlice';
+
 const PAGE_SIZE = 10;
 
 const SORT_OPTIONS: {
@@ -86,6 +90,10 @@ const ProductListScreen = () => {
   const isSearching = debouncedSearch.trim().length > 0;
 
   const isCategorySelected = selectedCategory.length > 0;
+
+  const dispatch = useDispatch<AppDispatch>();
+
+  const favorites = useSelector((state: RootState) => state.favorites.items);
 
   /*
    * Search has priority over category.
@@ -336,6 +344,14 @@ const ProductListScreen = () => {
           })
         }
       >
+        <TouchableOpacity
+          onPress={() => dispatch(toggleFavorite(item))}
+          style={styles.favoriteButton}
+        >
+          <Text style={styles.favoriteText}>
+            {favorites.some(favorite => favorite.id === item.id) ? '♥' : '♡'}
+          </Text>
+        </TouchableOpacity>
         <Image source={{ uri: item.thumbnail }} style={styles.image} />
 
         <View style={styles.info}>
@@ -557,6 +573,17 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     backgroundColor: '#fff',
+  },
+
+  favoriteButton: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    padding: 8,
+  },
+
+  favoriteText: {
+    fontSize: 24,
   },
 
   image: {

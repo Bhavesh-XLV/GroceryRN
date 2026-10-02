@@ -6,15 +6,21 @@ import {
   StyleSheet,
   Text,
   View,
+  TouchableOpacity,
 } from 'react-native';
 
 import { useGetProductByIdQuery } from '../../api/apiSlice';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { toggleFavorite } from '../../store/favoriteSlice';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
 const ProductDetailScreen = ({ route }: Props) => {
+  const dispatch = useDispatch<AppDispatch>();
+
   const { productId } = route.params;
 
   const {
@@ -22,6 +28,10 @@ const ProductDetailScreen = ({ route }: Props) => {
     isLoading,
     isError,
   } = useGetProductByIdQuery(productId);
+
+  const isFavorite = useSelector((state: RootState) =>
+    state.favorites.items.some(item => item.id === product?.id),
+  );
 
   if (isLoading) {
     return (
@@ -44,6 +54,18 @@ const ProductDetailScreen = ({ route }: Props) => {
       <Image source={{ uri: product.thumbnail }} style={styles.image} />
 
       <Text style={styles.title}>{product.title}</Text>
+
+      <TouchableOpacity
+        onPress={() => {
+          if (product) {
+            console.log('product', product);
+            dispatch(toggleFavorite(product));
+          }
+        }}
+        style={styles.favoriteButton}
+      >
+        <Text style={styles.favoriteText}>{isFavorite ? '♥' : '♡'}</Text>
+      </TouchableOpacity>
 
       <Text style={styles.price}>${product.price}</Text>
 
@@ -99,6 +121,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+  },
+
+  favoriteText: {
+    fontSize: 30,
   },
 });
 

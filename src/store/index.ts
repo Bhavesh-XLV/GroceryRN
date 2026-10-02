@@ -3,11 +3,13 @@ import { configureStore } from '@reduxjs/toolkit';
 import { apiSlice } from '../api/apiSlice';
 import appReducer from './appSlice';
 import authReducer from './authSlice';
+import favoriteReducer from './favoriteSlice';
 
 export const store = configureStore({
   reducer: {
     app: appReducer,
     auth: authReducer,
+    favorites: favoriteReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
 

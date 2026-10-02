@@ -8,12 +8,14 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { AppDispatch, store } from './src/store';
 import { restoreSession } from './src/store/authSlice';
 import { StyleSheet } from 'react-native';
+import { restoreFavorites } from './src/store/favoriteSlice';
 
 function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     dispatch(restoreSession());
+    dispatch(restoreFavorites());
   }, [dispatch]);
 
   return (
