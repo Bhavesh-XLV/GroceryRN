@@ -27,3 +27,16 @@ export async function clearTokens(): Promise<void> {
     service: SERVICE,
   });
 }
+
+export async function updateAccessToken(accessToken: string): Promise<void> {
+  const tokens = await getTokens();
+
+  if (!tokens) {
+    return;
+  }
+
+  await saveTokens({
+    accessToken,
+    refreshToken: tokens.refreshToken,
+  });
+}
