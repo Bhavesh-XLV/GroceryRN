@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
 
 import LoginScreen from '../screens/auth/LoginScreen';
-import HomeScreen from '../screens/products/HomeScreen';
+import ProductListScreen from '../screens/products/ProductListScreen';
 import { RootState } from '../store';
 
 const Stack = createNativeStackNavigator();
@@ -24,7 +24,7 @@ function AppNavigator() {
         {accessToken ? (
           <Stack.Screen
             name="Home"
-            component={HomeScreen}
+            component={ProductListScreen}
             options={{
               headerShown: false,
             }}

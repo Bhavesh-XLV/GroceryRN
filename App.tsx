@@ -2,10 +2,12 @@ import 'react-native-gesture-handler';
 
 import React, { useEffect } from 'react';
 import { Provider, useDispatch } from 'react-redux';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import AppNavigator from './src/navigation/AppNavigator';
 import { AppDispatch, store } from './src/store';
 import { restoreSession } from './src/store/authSlice';
+import { StyleSheet } from 'react-native';
 
 function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
@@ -14,15 +16,27 @@ function AppInitializer() {
     dispatch(restoreSession());
   }, [dispatch]);
 
-  return <AppNavigator />;
+  return (
+    <SafeAreaView style={styles.container}>
+      <AppNavigator />
+    </SafeAreaView>
+  );
 }
 
 function App() {
   return (
     <Provider store={store}>
-      <AppInitializer />
+      <SafeAreaProvider>
+        <AppInitializer />
+      </SafeAreaProvider>
     </Provider>
   );
 }
 
 export default App;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
