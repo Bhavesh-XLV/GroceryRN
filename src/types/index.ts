@@ -51,3 +51,5 @@ export interface ProductListResponse {
 export type ProductSortBy = 'price' | 'rating' | 'title';
 
 export type SortOrder = 'asc' | 'desc';
+
+export * from './order';

@@ -9,6 +9,8 @@ import { AppDispatch, store } from './src/store';
 import { restoreSession } from './src/store/authSlice';
 import { StyleSheet } from 'react-native';
 import { restoreFavorites } from './src/store/favoriteSlice';
+import { restoreCart } from './src/store/cartSlice';
+import { restoreOrders } from './src/store/orderSlice';
 
 function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
@@ -16,6 +18,8 @@ function AppInitializer() {
   useEffect(() => {
     dispatch(restoreSession());
     dispatch(restoreFavorites());
+    dispatch(restoreCart());
+    dispatch(restoreOrders());
   }, [dispatch]);
 
   return (

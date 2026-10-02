@@ -16,6 +16,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { toggleFavorite } from '../../store/favoriteSlice';
 
+import {
+  addToCart,
+  decreaseQuantity,
+  increaseQuantity,
+} from '../../store/cartSlice';
+
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
 const ProductDetailScreen = ({ route }: Props) => {
@@ -28,6 +34,10 @@ const ProductDetailScreen = ({ route }: Props) => {
     isLoading,
     isError,
   } = useGetProductByIdQuery(productId);
+
+  const cartItem = useSelector((state: RootState) =>
+    state.cart.items.find(item => item.product.id === product?.id),
+  );
 
   const isFavorite = useSelector((state: RootState) =>
     state.favorites.items.some(item => item.id === product?.id),
@@ -74,6 +84,33 @@ const ProductDetailScreen = ({ route }: Props) => {
       <Text style={styles.rating}>⭐ {product.rating}</Text>
 
       <Text style={styles.description}>{product.description}</Text>
+
+      {cartItem ? (
+        <View style={styles.quantityContainer}>
+          <TouchableOpacity
+            onPress={() => dispatch(decreaseQuantity(product.id))}
+            style={styles.quantityButton}
+          >
+            <Text style={styles.quantityButtonText}>−</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.quantityText}>{cartItem.quantity}</Text>
+
+          <TouchableOpacity
+            onPress={() => dispatch(increaseQuantity(product.id))}
+            style={styles.quantityButton}
+          >
+            <Text style={styles.quantityButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={styles.addToCartButton}
+          onPress={() => dispatch(addToCart(product))}
+        >
+          <Text style={styles.addToCartText}>Add to Cart</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 };
@@ -130,6 +167,48 @@ const styles = StyleSheet.create({
 
   favoriteText: {
     fontSize: 30,
+  },
+  quantityContainer: {
+    marginTop: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  quantityButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+  },
+
+  quantityButtonText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+  },
+
+  quantityText: {
+    minWidth: 50,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
+  addToCartButton: {
+    marginTop: 24,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+
+  addToCartText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

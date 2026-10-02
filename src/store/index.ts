@@ -4,12 +4,16 @@ import { apiSlice } from '../api/apiSlice';
 import appReducer from './appSlice';
 import authReducer from './authSlice';
 import favoriteReducer from './favoriteSlice';
+import cartReducer from './cartSlice';
+import orderReducer from './orderSlice';
 
 export const store = configureStore({
   reducer: {
     app: appReducer,
     auth: authReducer,
     favorites: favoriteReducer,
+    cart: cartReducer,
+    orders: orderReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
 
