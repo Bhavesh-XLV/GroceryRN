@@ -12,6 +12,7 @@ import { restoreFavorites } from './src/store/favoriteSlice';
 import { restoreCart } from './src/store/cartSlice';
 import { restoreOrders } from './src/store/orderSlice';
 import { restoreTheme } from './src/store/themeSlice';
+import OfflineBanner from './src/components/OfflineBanner';
 
 function AppInitializer() {
   const dispatch = useDispatch<AppDispatch>();
@@ -26,6 +27,7 @@ function AppInitializer() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <OfflineBanner />
       <AppNavigator />
     </SafeAreaView>
   );

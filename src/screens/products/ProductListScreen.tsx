@@ -41,6 +41,11 @@ import { toggleFavorite } from '../../store/favoriteSlice';
 import { Product, ProductSortBy, SortOrder } from '../../types';
 
 import { useDispatch, useSelector } from 'react-redux';
+import {
+  getProductsCache,
+  mergeProductsCache,
+} from '../../storage/productStorage';
+import useNetworkStatus from '../../hooks/useNetworkStatus';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
@@ -85,6 +90,7 @@ const SORT_OPTIONS: {
 
 const ProductListScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { isConnected } = useNetworkStatus();
   const dispatch = useDispatch<AppDispatch>();
 
   const { colors } = useAppTheme();
@@ -98,6 +104,9 @@ const ProductListScreen = () => {
   const [sortBy, setSortBy] = useState<ProductSortBy | undefined>('price');
 
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>('asc');
+  const [isFilterChanging, setIsFilterChanging] = useState(false);
+  const [cachedProducts, setCachedProducts] = useState<Product[]>([]);
+  const [isCacheLoading, setIsCacheLoading] = useState(false);
 
   const debouncedSearch = useDebounce(searchText, 500);
 
@@ -116,6 +125,7 @@ const ProductListScreen = () => {
    * start again from page 1.
    */
   useEffect(() => {
+    setIsFilterChanging(true);
     setSkip(0);
     setProducts([]);
   }, [debouncedSearch, selectedCategory, sortBy, sortOrder]);
@@ -240,27 +250,100 @@ const ProductListScreen = () => {
       return;
     }
 
-    setProducts(previousProducts => {
-      /*
-       * First page replaces current list.
-       */
-      if (skip === 0) {
-        return activeData.products;
+    const updateProducts = async () => {
+      setProducts(previousProducts => {
+        if (skip === 0) {
+          return activeData.products;
+        }
+
+        const existingIds = new Set(
+          previousProducts.map(product => product.id),
+        );
+
+        const newProducts = activeData.products.filter(
+          product => !existingIds.has(product.id),
+        );
+
+        return [...previousProducts, ...newProducts];
+      });
+      setIsFilterChanging(false);
+
+      await mergeProductsCache(activeData.products);
+    };
+
+    updateProducts();
+  }, [activeData, skip]);
+
+  useEffect(() => {
+    if (isConnected) {
+      return;
+    }
+
+    const loadCachedProducts = async () => {
+      setIsCacheLoading(true);
+
+      const cache = await getProductsCache();
+
+      if (cache) {
+        setCachedProducts(cache.products);
+      } else {
+        setCachedProducts([]);
       }
 
-      /*
-       * Later pages are appended.
-       * Set prevents duplicate products.
-       */
-      const existingIds = new Set(previousProducts.map(product => product.id));
+      setIsCacheLoading(false);
+    };
 
-      const newProducts = activeData.products.filter(
-        product => !existingIds.has(product.id),
+    loadCachedProducts();
+  }, [isConnected]);
+
+  const offlineProducts = useMemo(() => {
+    if (isConnected) {
+      return [];
+    }
+
+    let result = [...cachedProducts];
+
+    if (debouncedSearch.trim()) {
+      const searchQuery = debouncedSearch.trim().toLowerCase();
+
+      result = result.filter(product =>
+        product.title.toLowerCase().includes(searchQuery),
       );
+    }
 
-      return [...previousProducts, ...newProducts];
-    });
-  }, [activeData, skip]);
+    if (selectedCategory) {
+      result = result.filter(product => product.category === selectedCategory);
+    }
+
+    if (sortBy && sortOrder) {
+      result.sort((first, second) => {
+        if (sortBy === 'price') {
+          return sortOrder === 'asc'
+            ? first.price - second.price
+            : second.price - first.price;
+        }
+
+        if (sortBy === 'rating') {
+          return sortOrder === 'asc'
+            ? first.rating - second.rating
+            : second.rating - first.rating;
+        }
+
+        return sortOrder === 'asc'
+          ? first.title.localeCompare(second.title)
+          : second.title.localeCompare(first.title);
+      });
+    }
+
+    return result;
+  }, [
+    isConnected,
+    cachedProducts,
+    debouncedSearch,
+    selectedCategory,
+    sortBy,
+    sortOrder,
+  ]);
 
   /*
    * Pagination.
@@ -268,12 +351,12 @@ const ProductListScreen = () => {
   const hasMore = activeData ? products.length < activeData.total : false;
 
   const loadMore = useCallback(() => {
-    if (isActiveFetching || !hasMore) {
+    if (!isConnected || isActiveFetching || !hasMore) {
       return;
     }
 
     setSkip(previousSkip => previousSkip + PAGE_SIZE);
-  }, [isActiveFetching, hasMore]);
+  }, [isConnected, isActiveFetching, hasMore]);
 
   /*
    * Pull to refresh.
@@ -340,6 +423,9 @@ const ProductListScreen = () => {
   /*
    * Product renderer.
    */
+
+  const displayedProducts = isConnected ? products : offlineProducts;
+
   const renderProduct = ({ item }: { item: Product }) => {
     const cartItem = cartItems.find(
       cartItem => cartItem.product.id === item.id,
@@ -479,7 +565,7 @@ const ProductListScreen = () => {
   /*
    * Initial loading.
    */
-  if (isActiveLoading && skip === 0 && products.length === 0) {
+  if (isConnected && isActiveLoading && skip === 0 && products.length === 0) {
     return (
       <View
         style={[
@@ -497,7 +583,7 @@ const ProductListScreen = () => {
   /*
    * Error.
    */
-  if (isActiveError && products.length === 0) {
+  if (isConnected && isActiveError && products.length === 0) {
     return (
       <View
         style={[
@@ -633,12 +719,18 @@ const ProductListScreen = () => {
       </View>
 
       {/* Search loading */}
-      {isSearching && isSearchFetching && products.length === 0 && (
-        <ActivityIndicator style={styles.searchLoader} color={colors.primary} />
-      )}
+      {/* {isConnected &&
+        isSearching &&
+        isSearchFetching &&
+        products.length === 0 && (
+          <ActivityIndicator
+            style={styles.searchLoader}
+            color={colors.primary}
+          />
+        )} */}
 
       <FlatList
-        data={products}
+        data={displayedProducts}
         keyExtractor={item => item.id.toString()}
         renderItem={renderProduct}
         onEndReached={loadMore}
@@ -658,17 +750,39 @@ const ProductListScreen = () => {
           ) : null;
         }}
         ListEmptyComponent={() => {
-          return !isActiveFetching ? (
+          if (isCacheLoading || isFilterChanging || isActiveFetching) {
+            return (
+              <View style={styles.emptyContainer}>
+                <ActivityIndicator color={colors.primary} />
+              </View>
+            );
+          }
+
+          if (!isConnected) {
+            return (
+              <View style={styles.emptyContainer}>
+                <Text
+                  style={[styles.emptyText, { color: colors.secondaryText }]}
+                >
+                  No cached products available.
+                </Text>
+
+                <Text
+                  style={[styles.emptySubText, { color: colors.secondaryText }]}
+                >
+                  Connect to the internet to load products.
+                </Text>
+              </View>
+            );
+          }
+
+          return (
             <View style={styles.emptyContainer}>
-              <Text
-                style={{
-                  color: colors.secondaryText,
-                }}
-              >
+              <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
                 No products found.
               </Text>
             </View>
-          ) : null;
+          );
         }}
       />
     </View>
@@ -829,6 +943,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '700',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  emptySubText: {
+    marginTop: 6,
+    fontSize: 13,
   },
 });
 

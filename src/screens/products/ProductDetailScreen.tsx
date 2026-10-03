@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useGetProductByIdQuery } from '../../api/apiSlice';
 import { useAppTheme } from '../../hooks/useAppTheme';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { Product } from '../../types';
 import { AppDispatch, RootState } from '../../store';
 import {
   addToCart,
@@ -21,20 +22,42 @@ import {
   increaseQuantity,
 } from '../../store/cartSlice';
 import { toggleFavorite } from '../../store/favoriteSlice';
+import { getCachedProduct } from '../../storage/productStorage';
+import useNetworkStatus from '../../hooks/useNetworkStatus';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
 const ProductDetailScreen = ({ route }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
   const { colors } = useAppTheme();
+  const { isConnected } = useNetworkStatus();
+  const [cachedProduct, setCachedProduct] = useState<Product | null>(null);
+  const [isCacheLoading, setIsCacheLoading] = useState(false);
 
   const { productId } = route.params;
 
   const {
-    data: product,
+    data: apiProduct,
     isLoading,
     isError,
-  } = useGetProductByIdQuery(productId);
+  } = useGetProductByIdQuery(productId, {
+    skip: !isConnected,
+  });
+
+  const product = isConnected ? apiProduct : cachedProduct;
+
+  useEffect(() => {
+    if (isConnected) {
+      return;
+    }
+    const loadCachedProduct = async () => {
+      setIsCacheLoading(true);
+      const product = await getCachedProduct(productId);
+      setCachedProduct(product);
+      setIsCacheLoading(false);
+    };
+    loadCachedProduct();
+  }, [isConnected, productId]);
 
   const cartItem = useSelector((state: RootState) =>
     state.cart.items.find(item => item.product.id === product?.id),
@@ -44,7 +67,7 @@ const ProductDetailScreen = ({ route }: Props) => {
     state.favorites.items.some(item => item.id === product?.id),
   );
 
-  if (isLoading) {
+  if (isCacheLoading || (isConnected && isLoading)) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -52,7 +75,7 @@ const ProductDetailScreen = ({ route }: Props) => {
     );
   }
 
-  if (isError || !product) {
+  if (!product || (isConnected && isError)) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <Text style={{ color: colors.text }}>Unable to load product.</Text>
