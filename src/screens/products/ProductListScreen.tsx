@@ -125,10 +125,14 @@ const ProductListScreen = () => {
    * start again from page 1.
    */
   useEffect(() => {
-    setIsFilterChanging(true);
     setSkip(0);
-    // setProducts([]);
-  }, [debouncedSearch, selectedCategory, sortBy, sortOrder]);
+
+    if (isConnected) {
+      setIsFilterChanging(true);
+    } else {
+      setIsFilterChanging(false);
+    }
+  }, [debouncedSearch, selectedCategory, sortBy, sortOrder, isConnected]);
 
   /*
    * Categories
@@ -153,7 +157,7 @@ const ProductListScreen = () => {
       order: sortOrder,
     },
     {
-      skip: isFiltered,
+      skip: !isConnected || isFiltered,
     },
   );
 
@@ -174,7 +178,7 @@ const ProductListScreen = () => {
       order: sortOrder,
     },
     {
-      skip: !isSearching,
+      skip: !isConnected || !isSearching,
     },
   );
 
@@ -195,7 +199,7 @@ const ProductListScreen = () => {
       order: sortOrder,
     },
     {
-      skip: !isCategorySelected || isSearching,
+      skip: !isConnected || !isCategorySelected || isSearching,
     },
   );
 
@@ -750,7 +754,10 @@ const ProductListScreen = () => {
           ) : null;
         }}
         ListEmptyComponent={() => {
-          if (isCacheLoading || isFilterChanging || isActiveFetching) {
+          if (
+            isCacheLoading ||
+            (isConnected && (isFilterChanging || isActiveFetching))
+          ) {
             return (
               <View style={styles.emptyContainer}>
                 <ActivityIndicator color={colors.primary} />
