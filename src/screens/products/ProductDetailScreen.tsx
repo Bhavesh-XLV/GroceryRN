@@ -70,7 +70,11 @@ const ProductDetailScreen = ({ route }: Props) => {
   if (isCacheLoading || (isConnected && isLoading)) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator
+          testID="product-detail-loader"
+          size="large"
+          color={colors.primary}
+        />
       </View>
     );
   }
