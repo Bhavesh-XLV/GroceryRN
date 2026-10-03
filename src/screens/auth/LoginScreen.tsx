@@ -11,9 +11,12 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { loginUser } from '../../store/authSlice';
 import { AppDispatch, RootState } from '../../store';
+import { useAppTheme } from '../../hooks/useAppTheme';
 
 function LoginScreen() {
   const dispatch = useDispatch<AppDispatch>();
+
+  const { colors } = useAppTheme();
 
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
@@ -53,32 +56,83 @@ function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Grocery App</Text>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.title,
+          {
+            color: colors.text,
+          },
+        ]}
+      >
+        Grocery App
+      </Text>
 
       <TextInput
         value={username}
         onChangeText={setUsername}
         placeholder="Username"
+        placeholderTextColor={colors.secondaryText}
         autoCapitalize="none"
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+        ]}
       />
 
-      {usernameError ? <Text style={styles.error}>{usernameError}</Text> : null}
+      {usernameError ? (
+        <Text style={[styles.error, { color: colors.danger }]}>
+          {usernameError}
+        </Text>
+      ) : null}
 
       <TextInput
         value={password}
         onChangeText={setPassword}
         placeholder="Password"
+        placeholderTextColor={colors.secondaryText}
         secureTextEntry
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            color: colors.text,
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
+        ]}
       />
 
-      {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
+      {passwordError ? (
+        <Text style={[styles.error, { color: colors.danger }]}>
+          {passwordError}
+        </Text>
+      ) : null}
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>
+      ) : null}
 
-      <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
+      <Pressable
+        style={[
+          styles.button,
+          {
+            backgroundColor: colors.primary,
+          },
+        ]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
         {loading ? (
           <ActivityIndicator color="#ffffff" />
         ) : (
@@ -105,20 +159,17 @@ const styles = StyleSheet.create({
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#cccccc',
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 12,
   },
 
   error: {
-    color: 'red',
     marginTop: 6,
   },
 
   button: {
     height: 48,
-    backgroundColor: '#222222',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',

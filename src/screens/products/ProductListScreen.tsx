@@ -127,7 +127,7 @@ const ProductListScreen = () => {
   useEffect(() => {
     setIsFilterChanging(true);
     setSkip(0);
-    setProducts([]);
+    // setProducts([]);
   }, [debouncedSearch, selectedCategory, sortBy, sortOrder]);
 
   /*
@@ -395,7 +395,7 @@ const ProductListScreen = () => {
       }
 
       setSkip(0);
-      setProducts([]);
+      // setProducts([]);
     },
     [selectedCategory],
   );
@@ -416,7 +416,7 @@ const ProductListScreen = () => {
       }
 
       setSkip(0);
-      setProducts([]);
+      // setProducts([]);
     },
     [sortBy, sortOrder],
   );
@@ -875,6 +875,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
+    marginRight: 40,
   },
 
   price: {
